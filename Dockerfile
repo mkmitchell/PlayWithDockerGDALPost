@@ -1,42 +1,47 @@
-# docker build -t benji . 
 FROM ubuntu:16.04
+o
+RUN apt-get update && \
+    apt-get -y install \
+        wget \
+        libcurl4-openssl-dev \
+        build-essential \
+        libpq-dev \
+        ogdi-bin \
+        libogdi3.2-dev \
+        libjasper-runtime \
+        libjasper-dev \
+        libjasper1 \
+        libgeos-c1v5 \
+        libproj-dev \
+        libpoppler-dev \
+        libsqlite3-dev \
+        libspatialite-dev \
+        python \
+        python-pip \
+        python-dev \
+        python-numpy-dev
 
 
-RUN apt-get update \
-    && apt-get -y install git \
-                          libpq-dev \
-                          python-dev \
-                          python-pip \
-    && apt-get -y upgrade \
-    && apt-get clean \
-    && rm -rf /tmp/* \
-    && pip install -U pip==9.0.1
+RUN wget http://download.osgeo.org/gdal/2.1.3/gdal-2.1.3.tar.gz -O /tmp/gdal-2.1.3.tar.gz && \
+    tar -x -f /tmp/gdal-2.1.3.tar.gz -C /tmp
 
+RUN cd /tmp/gdal-2.1.3 && \
+    ./configure \
+        --prefix=/usr \
+        --with-python \
+        --with-geos \
+        --with-geotiff \
+        --with-jpeg \
+        --with-png \
+        --with-expat \
+        --with-libkml \
+        --with-openjpeg \
+        --with-pg \
+        --with-curl \
+        --with-spatialite && \
+    make && make install
 
-RUN pip install numpy==1.11.0 \
-    && echo "deb http://ppa.launchpad.net/ubuntugis/ubuntugis-unstable/ubuntu xenial main" >> /etc/apt/sources.list \
-    && echo "deb-src http://ppa.launchpad.net/ubuntugis/ubuntugis-unstable/ubuntu xenial main" >> /etc/apt/sources.list \
-    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 314DF160 \
-    && apt-get update \
-    && apt-get -y install libgdal-dev gdal-bin \
-    && apt-get clean \
-    && rm -rf /tmp/*
+RUN pip install GDAL==2.1.3
+RUN pip install numpy scipy scikit-learn
 
-
-RUN CPLUS_INCLUDE_PATH=/usr/include/gdal \
-    C_INCLUDE_PATH=/usr/include/gdal \
-    pip install \
-        GDAL==2.1.0 \
-        SQLAlchemy==1.1.5 \
-        requests==2.12.5 \
-        simplejson==3.8.2 \
-        Flask==0.12 \
-        Flask-Cors==2.1.2 \
-        sh==1.12.9 \
-        numpy==1.12.0 \
-        psycopg2==2.6.2 \
-        geoalchemy2==0.4.0 \
-        voluptuous==0.9.3 \
-        matplotlib==2.0.0 \
-        Pillow==4.0.0 \
-        flask-autodoc
+CMD ["python2"]
